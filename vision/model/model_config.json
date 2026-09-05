@@ -1,0 +1,8 @@
+{
+  "vision_model": {
+    "path": "vision_model.onnx",
+    "input_size": [224, 224],
+    "classes": ["button", "input", "link", "text", "image"],
+    "version": "0.1.0"
+  }
+}

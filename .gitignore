@@ -1,0 +1,36 @@
+# Node
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Env
+.env
+.env.local
+
+# Models (large binaries - track via LFS or external storage)
+*.onnx
+models/**/*.onnx
+models/**/*.bin
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Demo artifacts
+demo/*.mp4
+
+# Logs
+*.log
