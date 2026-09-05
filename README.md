@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # OnDevice Browser Agent
 
 An on-device browser automation agent that perceives the screen, plans actions,
@@ -39,3 +40,6 @@ python server/app.py
 ## License
 
 TBD
+=======
+# OnDevice-Browser-Agent
+>>>>>>> b4ee50d7edcaff0f5783f1d738352fd26057d7d4
