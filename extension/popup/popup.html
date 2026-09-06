@@ -9,7 +9,17 @@
     <div class="popup-container">
       <h1>OnDevice Browser Agent</h1>
       <p id="status">Checking...</p>
-      <button id="toggle-agent">Start Agent</button>
+      <p id="execution-state" class="execution-state" hidden></p>
+      <label for="task-input" class="task-label">Task / Goal</label>
+      <input
+        id="task-input"
+        type="text"
+        placeholder="Search for AI courses and open the first result"
+        value="Search for AI courses and open the first result"
+      />
+      <button id="toggle-agent">Run Agent Step</button>
+      <button id="run-plan-btn" class="primary">Run Task Plan</button>
+      <button id="cancel-plan-btn">Cancel Plan</button>
       <button id="capture-btn">Capture Screen</button>
       <pre id="result"></pre>
     </div>

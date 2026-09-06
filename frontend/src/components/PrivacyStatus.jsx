@@ -16,10 +16,16 @@ export default function PrivacyStatus() {
       <h2 className="font-semibold mb-2">Privacy Status</h2>
       {error && <p className="text-sm text-red-500">Error: {error}</p>}
       {privacy && (
-        <p className="text-sm text-slate-500">
-          PII Redaction: {privacy.pii_redaction ? 'On' : 'Off'} · Face Blur:{' '}
-          {privacy.face_blur ? 'On' : 'Off'}
-        </p>
+        <div className="text-sm text-slate-500 space-y-1">
+          <p>
+            PII Redaction: {privacy.pii_redaction ? 'On' : 'Off'} · Face Blur:{' '}
+            {privacy.face_blur ? 'On' : 'Off'}
+          </p>
+          <p>
+            Screenshot pipeline:{' '}
+            {privacy.screenshot_sanitized ? 'Sanitized (SAFE)' : 'Awaiting capture'}
+          </p>
+        </div>
       )}
     </div>
   );

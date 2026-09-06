@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Screenshot Redaction Demo</title>
+    <style>
+      body {
+        font-family: Georgia, serif;
+        max-width: 560px;
+        margin: 48px auto;
+        padding: 24px;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+      }
+      .hint {
+        color: #475569;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        font-size: 14px;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        margin-top: 16px;
+        margin-right: 8px;
+        padding: 10px 16px;
+        background: #0f172a;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      .card-block {
+        margin-top: 20px;
+        padding: 12px 0;
+        border-top: 1px solid #e2e8f0;
+      }
+      #result {
+        margin-top: 16px;
+        color: #166534;
+        font-weight: bold;
+      }
+      .normal {
+        margin-top: 16px;
+        padding: 12px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Screenshot Redaction Demo</h1>
+    <p class="hint">
+      Visible PII below should be visually redacted in the sanitized screenshot.
+      Non-sensitive UI (name, search, buttons) should remain readable.
+    </p>
+
+    <p><strong>Name:</strong> Test User</p>
+    <p><strong>Email:</strong> test@example.com</p>
+    <p><strong>Phone:</strong> 9876543210</p>
+    <p><strong>Phone (formatted):</strong> 987-654-3210</p>
+
+    <label>
+      Email
+      <input id="email" name="email" type="email" value="test@example.com" autocomplete="email" />
+    </label>
+    <label>
+      Password
+      <input id="password" name="password" type="password" value="secret123" autocomplete="current-password" />
+    </label>
+    <label>
+      Credit Card
+      <input
+        id="card"
+        name="credit_card"
+        type="text"
+        value="4111 1111 1111 1111"
+        autocomplete="cc-number"
+        placeholder="Card number"
+        aria-label="credit card number"
+      />
+    </label>
+    <label>
+      SSN
+      <input id="ssn" name="ssn" type="text" value="123-45-6789" placeholder="Social security" />
+    </label>
+    <label>
+      Search
+      <input id="search" name="q" type="text" placeholder="Search" aria-label="search box" />
+    </label>
+
+    <div class="normal">
+      <p>Normal non-sensitive text: Welcome to the agent demo page.</p>
+      <p>Product: OnDevice Browser Agent · Status: Ready</p>
+      <p>
+        <strong>Sample face (local demo asset):</strong><br />
+        <img
+          src="assets/sample_face.png"
+          alt="Generic sample face for local privacy demo"
+          width="120"
+          height="120"
+          style="margin-top: 8px; border: 1px solid #cbd5e1"
+        />
+      </p>
+    </div>
+
+    <button id="submit-button" type="button">Submit</button>
+    <button id="secondary-button" type="button">Cancel</button>
+
+    <p id="result"></p>
+
+    <div class="card-block">
+      <p class="hint">
+        After Capture Screen in the extension popup, the dashboard should show
+        redacted email/phone/password/card regions and a Visual Privacy Report.
+      </p>
+    </div>
+
+    <script>
+      document.getElementById('submit-button').addEventListener('click', () => {
+        document.getElementById('result').textContent = 'Submit clicked!';
+      });
+      document.getElementById('secondary-button').addEventListener('click', () => {
+        document.getElementById('result').textContent = 'Cancel clicked!';
+      });
+    </script>
+  </body>
+</html>

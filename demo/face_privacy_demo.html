@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Face + PII Privacy Demo</title>
+    <style>
+      body {
+        font-family: Georgia, serif;
+        max-width: 640px;
+        margin: 40px auto;
+        padding: 24px;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+      }
+      .hint {
+        color: #475569;
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        font-size: 14px;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        margin-top: 16px;
+        margin-right: 8px;
+        padding: 10px 16px;
+        background: #0f172a;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      .row {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        margin-top: 16px;
+      }
+      .face-panel {
+        flex: 0 0 160px;
+        text-align: center;
+      }
+      .face-panel img,
+      .face-panel canvas {
+        width: 140px;
+        height: 168px;
+        object-fit: cover;
+        border: 1px solid #cbd5e1;
+        background: #e2e8f0;
+      }
+      .normal {
+        margin-top: 16px;
+        padding: 12px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+      }
+      .card-block {
+        margin-top: 20px;
+        padding: 12px 0;
+        border-top: 1px solid #e2e8f0;
+      }
+      #result {
+        margin-top: 16px;
+        color: #166534;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Face + PII Privacy Demo</h1>
+    <p class="hint">
+      Expected after Capture Screen: normal UI stays visible; email/phone blurred;
+      password blacked out; face region blurred. Detection + redaction run locally
+      before any sanitized screenshot is sent.
+    </p>
+
+    <div class="row">
+      <div class="face-panel">
+        <p><strong>Profile photo</strong></p>
+        <!-- Local demo asset only — not a real user photo -->
+        <img
+          id="demo-face"
+          src="assets/sample_face.png"
+          alt="Generic sample face for local privacy demo"
+          width="140"
+          height="168"
+        />
+        <canvas id="face-fallback" width="140" height="168" hidden></canvas>
+        <p class="hint" style="margin-top: 8px">Sample / test image</p>
+      </div>
+      <div style="flex: 1">
+        <p><strong>Name:</strong> Test User</p>
+        <p><strong>Email:</strong> test@example.com</p>
+        <p><strong>Phone:</strong> 987-654-3210</p>
+
+        <label>
+          Email
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value="test@example.com"
+            autocomplete="email"
+          />
+        </label>
+        <label>
+          Password
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value="secret123"
+            autocomplete="current-password"
+          />
+        </label>
+        <label>
+          Phone
+          <input id="phone" name="phone" type="tel" value="9876543210" />
+        </label>
+        <label>
+          Search
+          <input id="search" name="q" type="text" placeholder="Search" aria-label="search box" />
+        </label>
+      </div>
+    </div>
+
+    <div class="normal">
+      <p>Normal non-sensitive text: Welcome to the face privacy demo.</p>
+      <p>Product: OnDevice Browser Agent · Milestone 2B</p>
+    </div>
+
+    <button id="submit-button" type="button">Submit</button>
+    <button id="secondary-button" type="button">Cancel</button>
+    <p id="result"></p>
+
+    <div class="card-block">
+      <p class="hint">
+        1. Start the Flask backend.<br />
+        2. Load this page in Chrome with the extension.<br />
+        3. Click Capture Screen in the popup.<br />
+        4. Check the dashboard Visual Privacy Report for faces + PII timing.
+      </p>
+    </div>
+
+    <script>
+      // If the PNG asset is missing, draw a local generic face on canvas.
+      const img = document.getElementById('demo-face');
+      const canvas = document.getElementById('face-fallback');
+      img.addEventListener('error', () => {
+        img.hidden = true;
+        canvas.hidden = false;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#e8dfd6';
+        ctx.fillRect(0, 0, 140, 168);
+        ctx.fillStyle = '#b89a82';
+        ctx.beginPath();
+        ctx.ellipse(70, 90, 48, 60, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#2a2a2a';
+        ctx.beginPath();
+        ctx.arc(52, 80, 6, 0, Math.PI * 2);
+        ctx.arc(88, 80, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#5a3030';
+        ctx.beginPath();
+        ctx.ellipse(70, 115, 16, 8, 0, 0.1, Math.PI - 0.1);
+        ctx.stroke();
+      });
+
+      document.getElementById('submit-button').addEventListener('click', () => {
+        document.getElementById('result').textContent = 'Submit clicked!';
+      });
+      document.getElementById('secondary-button').addEventListener('click', () => {
+        document.getElementById('result').textContent = 'Cancel clicked!';
+      });
+    </script>
+  </body>
+</html>

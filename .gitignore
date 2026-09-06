@@ -34,3 +34,13 @@ demo/*.mp4
 
 # Logs
 *.log
+
+# Local persistent agent database (Milestone 5A)
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

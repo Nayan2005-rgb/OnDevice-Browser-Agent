@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visual UI Perception Demo — OnDevice Browser Agent</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --ink: #1e293b;
+      --accent: #1d4ed8;
+      --muted: #64748b;
+      --card: #ffffff;
+      --border: #dbe3ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      background: linear-gradient(160deg, #e8eef8 0%, var(--bg) 40%, #eef6f2 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    header h1 { margin: 0; font-size: 1.15rem; letter-spacing: 0.02em; }
+    nav a {
+      color: #cbd5e1;
+      margin-left: 1rem;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    nav a:hover { color: #fff; }
+    main {
+      max-width: 960px;
+      margin: 1.5rem auto;
+      padding: 0 1rem 3rem;
+      display: grid;
+      gap: 1.25rem;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 1rem;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+    .profile {
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #cbd5e1;
+      display: block;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .card h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"] {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      margin-bottom: 0.85rem;
+      font-size: 0.95rem;
+    }
+    .row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    button, .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 1.1rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: var(--ink);
+    }
+    .note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .legend span {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 0.4rem 0.55rem;
+    }
+    dialog {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      width: min(420px, 92vw);
+    }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.45); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Visual UI Perception Demo</h1>
+    <nav>
+      <a href="#home" id="nav-home">Home</a>
+      <a href="#profile" id="nav-profile">Profile</a>
+      <a href="#settings" id="nav-settings">Settings</a>
+      <a href="#help" id="nav-help">Help</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <img
+        class="profile"
+        id="profile-image"
+        alt="Profile placeholder"
+        width="120"
+        height="120"
+        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect fill='%2394a3b8' width='120' height='120'/%3E%3Ccircle cx='60' cy='46' r='22' fill='%23e2e8f0'/%3E%3Cellipse cx='60' cy='98' rx='34' ry='24' fill='%23e2e8f0'/%3E%3C/svg%3E"
+      />
+      <div>
+        <h2 style="margin:0 0 0.35rem">Account workspace</h2>
+        <p class="note" style="margin:0">
+          Demo page for Milestone 3A — DOM geometry, contour vision, fusion, and privacy redaction.
+          Use the extension Capture flow, then inspect the dashboard Visual Perception Map toggles.
+        </p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Search</h2>
+      <label for="search">Search input</label>
+      <input id="search" type="search" name="q" placeholder="Search documents…" />
+    </section>
+
+    <section class="card" id="profile">
+      <h2>Contact form</h2>
+      <form id="contact-form" onsubmit="return false;">
+        <label for="email">Email input (sensitive)</label>
+        <input
+          id="email"
+          type="email"
+          name="email"
+          autocomplete="email"
+          value="user@example.com"
+          placeholder="you@example.com"
+        />
+
+        <label for="password">Password input (sensitive)</label>
+        <input
+          id="password"
+          type="password"
+          name="password"
+          autocomplete="current-password"
+          value="SuperSecret123!"
+          placeholder="Password"
+        />
+
+        <p class="note">
+          Normal helper text: submit when ready. Email/password values must be redacted in the UI map.
+        </p>
+
+        <div class="row">
+          <button type="submit" id="submit" class="btn-primary">Submit</button>
+          <button type="button" id="cancel" class="btn-secondary">Cancel</button>
+          <button type="button" id="open-modal" class="btn-secondary">Open dialog</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" id="settings">
+      <h2>Content card / container</h2>
+      <p class="note">
+        This card is a large container region. Vision heuristics may classify it as container/dialog.
+        Primary and secondary buttons above should fuse DOM + vision when geometry aligns.
+      </p>
+      <div class="legend">
+        <span>Search → DOM + vision input</span>
+        <span>Email → geometry visible, text redacted</span>
+        <span>Password → input, value hidden</span>
+        <span>Submit → fused button</span>
+        <span>Modal → dialog / container</span>
+      </div>
+    </section>
+
+    <section class="card" id="help">
+      <h2>How to demo</h2>
+      <ol class="note">
+        <li>Load this page in Chrome with the OnDevice extension.</li>
+        <li>Start the local Flask server and dashboard.</li>
+        <li>Use <strong>Capture Screenshot</strong> in the popup (privacy on).</li>
+        <li>Open the dashboard Visual Perception Map and toggle:
+          Screenshot / DOM / Vision / Fused / Layout.</li>
+      </ol>
+    </section>
+  </main>
+
+  <dialog id="demo-dialog">
+    <h2 style="margin-top:0">Confirm action</h2>
+    <p class="note">Modal/dialog region for layout + vision detection.</p>
+    <div class="row">
+      <button type="button" id="dialog-ok" class="btn-primary">OK</button>
+      <button type="button" id="dialog-close" class="btn-secondary">Close</button>
+    </div>
+  </dialog>
+
+  <script>
+    const dialog = document.getElementById('demo-dialog');
+    document.getElementById('open-modal').addEventListener('click', () => dialog.showModal());
+    document.getElementById('dialog-close').addEventListener('click', () => dialog.close());
+    document.getElementById('dialog-ok').addEventListener('click', () => dialog.close());
+  </script>
+</body>
+</html>

@@ -1,18 +1,40 @@
 """Detects interactable UI elements (buttons, inputs, links) from a
-screenshot so the action planner can target them."""
+screenshot so the action planner can target them.
 
-from typing import List, Dict
+Milestone 3A: ContourBasedUIDetector is the default local backend.
+Future: OnnxUIDetector / WebGPUUIDetector / TransformerUIDetector via
+``create_ui_detector(backend=...)`` without changing callers.
+"""
+
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 
+from vision.ui_detector import (
+    ContourBasedUIDetector,
+    DOMGeometryDetector,
+    UIElementDetector,
+    create_ui_detector,
+)
 
-class UIElementDetector:
-    def __init__(self, model_path: str = "vision/model/vision_model.onnx"):
-        self.model_path = model_path
+__all__ = [
+    "UIElementDetector",
+    "ContourBasedUIDetector",
+    "DOMGeometryDetector",
+    "create_ui_detector",
+    "detect_ui_elements",
+]
 
-    def detect_elements(self, image: np.ndarray) -> List[Dict]:
-        """Return a list of detected UI elements with type, bbox, and confidence.
 
-        TODO: implement using the ONNX UI-element model, or fall back to
-        DOM-based detection from privacy/dom_detector.py when available.
-        """
-        return []
+def detect_ui_elements(
+    image: Optional[np.ndarray] = None,
+    *,
+    backend: str = "contour",
+    dom_elements: Optional[List[Dict[str, Any]]] = None,
+    **kwargs: Any,
+) -> List[Dict[str, Any]]:
+    """Run a UI detector and return element dicts."""
+    detector = create_ui_detector(backend, **kwargs)
+    if isinstance(detector, DOMGeometryDetector):
+        return [el.to_dict() for el in detector.from_dom_elements(dom_elements or [])]
+    return detector.detect_elements(image)

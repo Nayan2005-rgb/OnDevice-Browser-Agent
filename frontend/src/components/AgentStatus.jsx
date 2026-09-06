@@ -2,13 +2,22 @@ import React, { useEffect, useState } from 'react';
 
 export default function AgentStatus() {
   const [status, setStatus] = useState('Loading...');
+  const [lastTask, setLastTask] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('/api/agent/status')
-      .then((res) => res.json())
-      .then((data) => setStatus(data.status))
-      .catch((err) => setError(err.message));
+    const load = () => {
+      fetch('/api/agent/status')
+        .then((res) => res.json())
+        .then((data) => {
+          setStatus(data.status);
+          setLastTask(data.last_task || null);
+        })
+        .catch((err) => setError(err.message));
+    };
+    load();
+    const id = setInterval(load, 3000);
+    return () => clearInterval(id);
   }, []);
 
   return (
@@ -17,6 +26,9 @@ export default function AgentStatus() {
       <p className="text-sm text-slate-500">
         {error ? `Error: ${error}` : status}
       </p>
+      {lastTask && (
+        <p className="text-xs text-slate-400 mt-1 truncate">Task: {lastTask}</p>
+      )}
     </div>
   );
 }

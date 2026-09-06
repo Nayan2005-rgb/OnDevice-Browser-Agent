@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Milestone 5A — Persistent Session Demo</title>
+  <style>
+    :root {
+      --bg: #eef3f1;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --line: #e7e5e4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "IBM Plex Sans", sans-serif;
+      background: linear-gradient(165deg, #eef5f2 0%, #e4ebf0 55%, #f7f3ea 100%);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    header {
+      padding: 1.5rem 1.25rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.6);
+    }
+    h1 { margin: 0 0 0.25rem; font-size: 1.35rem; }
+    .sub { color: var(--muted); font-size: 0.95rem; max-width: 48rem; }
+    main { padding: 1.25rem; display: grid; gap: 1rem; max-width: 980px; margin: 0 auto; }
+    section {
+      background: rgba(255,255,255,0.88);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+    }
+    section h2 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 0.45rem 0.85rem;
+      font: inherit;
+      cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button.warn { background: var(--warn); color: #fff; border-color: var(--warn); }
+    button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .badge {
+      display: inline-block; font-size: 0.75rem; padding: 0.15rem 0.45rem;
+      border-radius: 6px; background: #ecfdf5; color: var(--accent); border: 1px solid #99f6e4;
+    }
+    .page {
+      margin-top: 0.75rem; padding: 0.85rem; border: 1px dashed var(--line);
+      border-radius: 8px; background: #fff;
+    }
+    .overlay {
+      position: fixed; inset: 0; background: rgba(28,25,23,0.45);
+      display: none; align-items: center; justify-content: center; z-index: 40;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 12px; padding: 1.25rem;
+      width: min(420px, 92vw); border: 1px solid var(--line);
+    }
+    .modal label { display: block; font-size: 0.85rem; margin: 0.55rem 0 0.2rem; }
+    .modal input { width: 100%; padding: 0.4rem 0.6rem; border-radius: 8px; border: 1px solid var(--line); }
+    .log {
+      font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem;
+      background: #1c1917; color: #ecfdf5; padding: 0.75rem; border-radius: 8px;
+      max-height: 220px; overflow: auto; white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Milestone 5A — Persistent Agent Sessions</h1>
+    <p class="sub">
+      Demo page for pause/resume, server-restart recovery, operator-approved replan,
+      and user intervention. Backend remains authoritative; only sanitized metadata is persisted.
+    </p>
+  </header>
+  <main>
+    <section>
+      <h2>Demo Controls</h2>
+      <p class="meta">Toggle layouts to simulate page changes during pause / recovery.</p>
+      <div class="row">
+        <button type="button" id="btn-layout-a" class="primary">Layout A — Search</button>
+        <button type="button" id="btn-layout-b" class="warn">Layout B — Cookie + Moved Results</button>
+        <button type="button" id="btn-login" class="danger">Show Login / OTP</button>
+      </div>
+      <div id="page-root" class="page">
+        <div id="layout-a">
+          <h3>Product Search</h3>
+          <input id="search" type="search" placeholder="Search laptops" style="width:60%;padding:0.4rem;" />
+          <button type="button" id="btn-search">Search</button>
+          <div id="results" class="row" style="margin-top:0.75rem;">
+            <button type="button" class="result" data-name="Laptop A">Laptop A</button>
+            <button type="button" class="result" data-name="Laptop B">Laptop B</button>
+          </div>
+        </div>
+        <div id="layout-b" hidden>
+          <div id="cookie-bar" style="background:#fff7ed;padding:0.6rem;border-radius:8px;margin-bottom:0.75rem;">
+            We use cookies. <button type="button" id="btn-accept-cookies" class="primary">Accept cookies</button>
+          </div>
+          <h3>Results (layout shifted)</h3>
+          <div class="row">
+            <button type="button" class="result" data-name="Laptop A" style="margin-left:2rem;">Laptop A</button>
+          </div>
+        </div>
+        <div id="layout-login" hidden>
+          <h3>Sign in required</h3>
+          <label>Email <input type="email" autocomplete="username" /></label><br/>
+          <label>Password <input type="password" autocomplete="current-password" /></label><br/>
+          <label>OTP <input type="text" inputmode="numeric" /></label>
+          <p class="meta">Agent must pause for user intervention — never auto-fill secrets.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scenarios</h2>
+      <ol class="meta" style="color:var(--ink);">
+        <li><strong>A — Normal:</strong> Run multi-step plan → Pause → Resume → Complete (dashboard / extension).</li>
+        <li><strong>B — Restart:</strong> Complete step 1 → restart backend with hydrate → reconnect extension → recover with fresh perception.</li>
+        <li><strong>C — Page changed during pause:</strong> Pause → switch to Layout B → Resume → structural change → replan preview.</li>
+        <li><strong>D — Approve replan:</strong> Create session with <code>operator_replan_approval</code> → approve preview → plan version increments.</li>
+        <li><strong>E — Reject replan:</strong> Reject preview → session paused with reason <code>replan_rejected_by_operator</code>.</li>
+        <li><strong>F — Intervention:</strong> Show login → agent pauses → user signs in manually → resume with fresh perception.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>API helpers (local)</h2>
+      <p class="meta">These call the local agent on <code>127.0.0.1:5000</code>. Use the extension for real perception.</p>
+      <div class="row">
+        <button type="button" id="btn-create-session" class="primary">Create Session (operator replan)</button>
+        <button type="button" id="btn-list-sessions">List Sessions</button>
+      </div>
+      <pre class="log" id="log">Ready.</pre>
+    </section>
+  </main>
+
+  <script>
+    const API = 'http://127.0.0.1:5000/api';
+    const logEl = document.getElementById('log');
+    function log(msg, obj) {
+      const line = obj ? msg + '\\n' + JSON.stringify(obj, null, 2) : msg;
+      logEl.textContent = line + '\\n\\n' + logEl.textContent;
+    }
+
+    function show(id) {
+      ['layout-a', 'layout-b', 'layout-login'].forEach((x) => {
+        document.getElementById(x).hidden = x !== id;
+      });
+    }
+    document.getElementById('btn-layout-a').onclick = () => show('layout-a');
+    document.getElementById('btn-layout-b').onclick = () => show('layout-b');
+    document.getElementById('btn-login').onclick = () => show('layout-login');
+    document.getElementById('btn-accept-cookies').onclick = () => {
+      document.getElementById('cookie-bar').hidden = true;
+    };
+
+    document.getElementById('btn-create-session').onclick = async () => {
+      try {
+        const res = await fetch(API + '/agent/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            goal: 'Search for laptops and open the first result',
+            operator_replan_approval: true,
+            tab_id: 1,
+          }),
+        });
+        const data = await res.json();
+        log('Create session → ' + res.status, data);
+      } catch (e) {
+        log('Error: ' + e.message);
+      }
+    };
+    document.getElementById('btn-list-sessions').onclick = async () => {
+      try {
+        const res = await fetch(API + '/agent/sessions');
+        const data = await res.json();
+        log('List sessions → ' + res.status, data);
+      } catch (e) {
+        log('Error: ' + e.message);
+      }
+    };
+  </script>
+</body>
+</html>

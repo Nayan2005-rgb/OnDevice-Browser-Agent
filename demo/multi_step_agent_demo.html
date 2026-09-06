@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Milestone 4B — Multi-Step Agent Demo</title>
+  <style>
+    :root {
+      --bg: #f4f7f5;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --line: #e7e5e4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "IBM Plex Sans", sans-serif;
+      background: linear-gradient(160deg, #f4f7f5 0%, #e8eef0 100%);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    header {
+      padding: 1.5rem 1.25rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.55);
+    }
+    h1 { margin: 0 0 0.25rem; font-size: 1.35rem; }
+    .sub { color: var(--muted); font-size: 0.95rem; max-width: 42rem; }
+    main { padding: 1.25rem; display: grid; gap: 1rem; max-width: 960px; margin: 0 auto; }
+    section {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+    }
+    section h2 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+    button, .btn, input[type="text"] {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 0.45rem 0.85rem;
+      font: inherit;
+    }
+    button { cursor: pointer; }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    button.warn { background: var(--warn); color: #fff; border-color: var(--warn); }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: var(--accent);
+      border: 1px solid #99f6e4;
+    }
+    .badge.warn { background: #fff7ed; color: var(--warn); border-color: #fed7aa; }
+    .badge.danger { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
+    .results { margin-top: 0.75rem; display: grid; gap: 0.4rem; }
+    .result-item {
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .result-item:hover { border-color: var(--accent); }
+    .result-item.active { outline: 2px solid var(--accent); }
+    #loading-panel[hidden], #detail-panel[hidden] { display: none !important; }
+    .counters { font-size: 0.85rem; color: var(--muted); }
+    code { font-size: 0.85em; background: #f5f5f4; padding: 0.1rem 0.3rem; border-radius: 4px; }
+    a.demo-link { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Milestone 4B — Controlled Multi-Step Visual Task Planning</h1>
+    <p class="sub">
+      Use the extension popup <strong>Run Task Plan</strong> with the task strings below.
+      The backend plans steps, re-perceives between them, and never blindly executes a precomputed sequence.
+      Related: <a class="demo-link" href="action_lifecycle_demo.html">4A lifecycle demo</a>.
+    </p>
+  </header>
+
+  <main>
+    <section data-scenario="search-workspace">
+      <h2>Shared Search Workspace <span class="badge">Demo UI</span></h2>
+      <p class="meta">Stable IDs for search → wait → open first result → optional delete.</p>
+      <div class="row">
+        <input id="search-box" type="text" placeholder="Search…" aria-label="search box" style="flex:1; min-width:12rem;" />
+        <button id="search-button" class="primary" type="button">Search</button>
+      </div>
+      <div id="loading-panel" hidden>Loading results…</div>
+      <div id="results-area" class="results" aria-label="search results"></div>
+      <div id="detail-panel" hidden>
+        <h3 id="detail-title">Result detail</h3>
+        <p id="detail-body"></p>
+        <div class="row">
+          <button id="safe-open" type="button">Safe Open</button>
+          <button id="delete-demo-item" class="danger" type="button">Delete Demo Item</button>
+        </div>
+      </div>
+      <p class="counters" id="execution-counters">
+        searches: 0 · opens: 0 · deletes: 0
+      </p>
+    </section>
+
+    <section data-scenario="A">
+      <h2>Scenario A — Search + open first result <span class="badge">Happy path</span></h2>
+      <p class="meta">Task: <code>Search for AI courses and open the first result</code></p>
+      <ol>
+        <li>Type into <code>#search-box</code></li>
+        <li>Click <code>#search-button</code></li>
+        <li>Wait until results are visible</li>
+        <li>Fresh perception → click first result</li>
+        <li>Plan completes</li>
+      </ol>
+    </section>
+
+    <section data-scenario="B">
+      <h2>Scenario B — Delete requires confirmation <span class="badge warn">Confirm</span></h2>
+      <p class="meta">Task: <code>Search for demo item and delete the first result</code></p>
+      <ol>
+        <li>Safe search steps execute</li>
+        <li>Delete step pauses plan (<code>waiting_for_confirmation</code>)</li>
+        <li>Dashboard confirm → tab claims once → delete executes → verify → complete</li>
+      </ol>
+    </section>
+
+    <section data-scenario="C">
+      <h2>Scenario C — Cancel during execution <span class="badge danger">Cancel</span></h2>
+      <p class="meta">Start Scenario A, then use popup <strong>Cancel Plan</strong>.</p>
+      <p>Completed steps remain recorded; future steps are never executed.</p>
+    </section>
+
+    <section data-scenario="D">
+      <h2>Scenario D — Target disappears <span class="badge warn">Recovery</span></h2>
+      <p class="meta">
+        After search, click <button id="hide-results" type="button" class="warn">Hide results</button>
+        before the agent opens the first result. Expect fresh perception → resolution fail → bounded recovery → safe stop.
+      </p>
+    </section>
+
+    <section data-scenario="E">
+      <h2>Scenario E — Wait timeout <span class="badge danger">Timeout</span></h2>
+      <p class="meta">
+        Task: <code>Wait for results</code> on an empty page, or enable
+        <label><input id="block-results" type="checkbox" /> block results forever</label>
+        then run a search plan. Wait step fails after timeout; plan fails safely.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const DEMO_ITEMS = [
+      { id: 'result-1', title: 'AI courses — Intro', body: 'First matching result for AI courses.' },
+      { id: 'result-2', title: 'Machine Learning Path', body: 'Second result.' },
+      { id: 'result-3', title: 'Demo Item Pack', body: 'Useful for delete confirmation scenario.' },
+    ];
+
+    let searches = 0;
+    let opens = 0;
+    let deletes = 0;
+    let lastQuery = '';
+    let selected = null;
+
+    const searchBox = document.getElementById('search-box');
+    const searchBtn = document.getElementById('search-button');
+    const resultsArea = document.getElementById('results-area');
+    const loading = document.getElementById('loading-panel');
+    const detail = document.getElementById('detail-panel');
+    const counters = document.getElementById('execution-counters');
+    const blockResults = document.getElementById('block-results');
+
+    function updateCounters() {
+      counters.textContent = `searches: ${searches} · opens: ${opens} · deletes: ${deletes}`;
+    }
+
+    function renderResults(items) {
+      resultsArea.innerHTML = '';
+      if (!items.length) {
+        resultsArea.innerHTML = '<p class="meta">No results</p>';
+        return;
+      }
+      items.forEach((item, idx) => {
+        const el = document.createElement('div');
+        el.className = 'result-item';
+        el.id = item.id;
+        el.setAttribute('data-result-index', String(idx));
+        el.setAttribute('role', 'link');
+        el.textContent = (idx === 0 ? 'First search result: ' : 'Search result: ') + item.title;
+        el.addEventListener('click', () => openResult(item));
+        resultsArea.appendChild(el);
+      });
+    }
+
+    function openResult(item) {
+      selected = item;
+      opens += 1;
+      updateCounters();
+      document.getElementById('detail-title').textContent = item.title;
+      document.getElementById('detail-body').textContent = item.body;
+      detail.hidden = false;
+      document.querySelectorAll('.result-item').forEach((n) => {
+        n.classList.toggle('active', n.id === item.id);
+      });
+    }
+
+    function runSearch() {
+      lastQuery = (searchBox.value || '').trim();
+      searches += 1;
+      updateCounters();
+      detail.hidden = true;
+      resultsArea.innerHTML = '';
+      if (blockResults && blockResults.checked) {
+        loading.hidden = false;
+        loading.textContent = 'Loading results… (blocked for timeout demo)';
+        return;
+      }
+      loading.hidden = false;
+      loading.textContent = 'Loading results…';
+      setTimeout(() => {
+        loading.hidden = true;
+        const q = lastQuery.toLowerCase();
+        const filtered = DEMO_ITEMS.filter((it) =>
+          !q || it.title.toLowerCase().includes(q.split(/\s+/)[0]) || q.includes('ai') || q.includes('demo')
+        );
+        // Prefer AI courses first when query mentions AI
+        let items = filtered.length ? filtered : DEMO_ITEMS;
+        if (q.includes('ai')) {
+          items = [DEMO_ITEMS[0], DEMO_ITEMS[1], DEMO_ITEMS[2]];
+        } else if (q.includes('demo')) {
+          items = [DEMO_ITEMS[2], DEMO_ITEMS[0], DEMO_ITEMS[1]];
+        }
+        renderResults(items);
+      }, 450);
+    }
+
+    searchBtn.addEventListener('click', runSearch);
+    searchBox.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') runSearch();
+    });
+
+    document.getElementById('delete-demo-item').addEventListener('click', () => {
+      deletes += 1;
+      updateCounters();
+      if (selected) {
+        const node = document.getElementById(selected.id);
+        if (node) node.remove();
+      }
+      detail.hidden = true;
+      alert('Deleted (demo). Confirmation should have gated this action.');
+    });
+
+    document.getElementById('safe-open').addEventListener('click', () => {
+      alert('Safe action executed.');
+    });
+
+    document.getElementById('hide-results').addEventListener('click', () => {
+      resultsArea.innerHTML = '';
+      detail.hidden = true;
+    });
+
+    updateCounters();
+  </script>
+</body>
+</html>

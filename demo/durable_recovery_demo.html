@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Milestone 5B — Durable Recovery Demo</title>
+  <style>
+    :root {
+      --bg: #eef3f1;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --line: #e7e5e4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "IBM Plex Sans", sans-serif;
+      background: linear-gradient(165deg, #eef5f2 0%, #e4ebf0 55%, #f7f3ea 100%);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    header {
+      padding: 1.5rem 1.25rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.6);
+    }
+    h1 { margin: 0 0 0.25rem; font-size: 1.35rem; }
+    .sub { color: var(--muted); font-size: 0.95rem; max-width: 52rem; }
+    main { padding: 1.25rem; display: grid; gap: 1rem; max-width: 980px; margin: 0 auto; }
+    section {
+      background: rgba(255,255,255,0.88);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+    }
+    section h2 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 0.45rem 0.85rem;
+      font: inherit;
+      cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button.warn { background: var(--warn); color: #fff; border-color: var(--warn); }
+    button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .badge {
+      display: inline-block; font-size: 0.75rem; padding: 0.15rem 0.45rem;
+      border-radius: 6px; background: #ecfdf5; color: var(--accent); border: 1px solid #99f6e4;
+    }
+    .page {
+      margin-top: 0.75rem; padding: 0.85rem; border: 1px dashed var(--line);
+      border-radius: 8px; background: #fff;
+    }
+    .log {
+      font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem;
+      background: #1c1917; color: #ecfdf5; padding: 0.75rem; border-radius: 8px;
+      max-height: 260px; overflow: auto; white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Milestone 5B — Durable Action Lifecycle &amp; Crash Recovery</h1>
+    <p class="sub">
+      Demo scenarios for persistent confirmations, approved-action leases,
+      extension disconnect recovery, and duplicate execution protection.
+      Backend owns all action state — this page never submits selectors or coordinates.
+    </p>
+  </header>
+  <main>
+    <section>
+      <h2>Demo Surface</h2>
+      <p class="meta">Simulated page elements used by recovery scenarios.</p>
+      <div class="page">
+        <button id="search-btn" type="button">Search</button>
+        <button id="submit-btn" type="button">Submit</button>
+        <button id="delete-demo-item" type="button" class="danger">Delete Demo Item</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scenario A — Persistent Confirmation</h2>
+      <p class="meta">Create destructive action → pending confirmation → restart backend → confirmation restored.</p>
+      <div class="row">
+        <button class="primary" id="scenario-a">Run Scenario A</button>
+        <span class="badge" id="badge-a">idle</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scenario B — Approved Action Recovery</h2>
+      <p class="meta">Approve → restart before claim → restore → extension reconnect with fresh perception.</p>
+      <div class="row">
+        <button class="primary" id="scenario-b">Run Scenario B</button>
+        <span class="badge" id="badge-b">idle</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scenario C — Extension Crash / Lease Expiry</h2>
+      <p class="meta">Claim → lease expires → recovery_required → fresh perception → safe recovery.</p>
+      <div class="row">
+        <button class="warn" id="scenario-c">Run Scenario C</button>
+        <span class="badge" id="badge-c">idle</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scenario D — Interrupted Safe Action</h2>
+      <p class="meta">Click Submit interrupted → fresh perception → re-resolve → resume.</p>
+      <div class="row">
+        <button class="primary" id="scenario-d">Run Scenario D</button>
+        <span class="badge" id="badge-d">idle</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scenario E — Interrupted Destructive Action</h2>
+      <p class="meta">Delete confirmed → interrupted → requires confirmation again.</p>
+      <div class="row">
+        <button class="danger" id="scenario-e">Run Scenario E</button>
+        <span class="badge" id="badge-e">idle</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scenario F — Duplicate Execution Report</h2>
+      <p class="meta">Same execution_id twice → first success, second duplicate_execution.</p>
+      <div class="row">
+        <button class="primary" id="scenario-f">Run Scenario F</button>
+        <span class="badge" id="badge-f">idle</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Event Log</h2>
+      <div class="log" id="log"></div>
+    </section>
+  </main>
+  <script>
+    const API = "http://127.0.0.1:5000/api/agent";
+    const logEl = document.getElementById("log");
+    function log(msg) {
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+    function setBadge(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+    const demoPage = {
+      url: "http://localhost/demo/durable_recovery_demo.html",
+      title: "Durable Recovery Demo",
+      visibleText: "Search Submit Delete Demo Item",
+      elements: [
+        { tag: "button", text: "Search", selector: "#search-btn", id: "search-btn", sensitive: false },
+        { tag: "button", text: "Submit", selector: "#submit-btn", id: "submit-btn", sensitive: false },
+        { tag: "button", text: "Delete Demo Item", selector: "#delete-demo-item", id: "delete-demo-item", sensitive: false }
+      ]
+    };
+
+    async function step(task, tabId) {
+      const res = await fetch(API + "/step", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task,
+          tab_id: tabId,
+          window_id: 1,
+          page: demoPage,
+          privacy_report: { total_redactions: 0 }
+        })
+      });
+      return res.json();
+    }
+
+    document.getElementById("scenario-a").onclick = async () => {
+      setBadge("badge-a", "running");
+      log("A: Creating Delete Demo Item confirmation…");
+      const data = await step("Click Delete Demo Item", 501);
+      log("A: status=" + data.status + " confirmation=" + (data.confirmation && data.confirmation.id));
+      log("A: Restart the backend, then GET /api/agent/actions/pending — confirmation should remain.");
+      setBadge("badge-a", "awaiting restart");
+    };
+
+    document.getElementById("scenario-b").onclick = async () => {
+      setBadge("badge-b", "running");
+      const data = await step("Click Delete Demo Item", 502);
+      const conf = data.confirmation;
+      const approved = await fetch(API + "/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation_id: conf.id })
+      }).then(r => r.json());
+      log("B: approved execution_id=" + approved.execution_id);
+      log("B: Restart backend before claim; action should restore as waiting_for_browser.");
+      setBadge("badge-b", "awaiting restart");
+    };
+
+    document.getElementById("scenario-c").onclick = async () => {
+      setBadge("badge-c", "running");
+      const data = await step("Click Search", 503);
+      log("C: Use lease expiry / claim path via API tests or short ACTION_LEASE_SECONDS.");
+      log("C: After lease expiry expect recovery_required — never blind replay.");
+      setBadge("badge-c", data.status || "done");
+    };
+
+    document.getElementById("scenario-d").onclick = async () => {
+      setBadge("badge-d", "running");
+      const data = await step("Click Submit", 504);
+      log("D: step=" + data.status);
+      const recover = await fetch(API + "/action/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lifecycle_id: data.lifecycle_id,
+          tab_id: 504,
+          page: demoPage,
+          interrupted_status: "executing"
+        })
+      }).then(r => r.json());
+      log("D: recovery=" + JSON.stringify(recover.recovery && recover.recovery.decision));
+      setBadge("badge-d", "done");
+    };
+
+    document.getElementById("scenario-e").onclick = async () => {
+      setBadge("badge-e", "running");
+      const data = await step("Click Delete Demo Item", 505);
+      if (data.confirmation) {
+        await fetch(API + "/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirmation_id: data.confirmation.id })
+        });
+      }
+      const recover = await fetch(API + "/action/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lifecycle_id: data.lifecycle_id,
+          tab_id: 505,
+          page: demoPage
+        })
+      }).then(r => r.json());
+      log("E: recovery decision=" + (recover.recovery && recover.recovery.decision));
+      setBadge("badge-e", "done");
+    };
+
+    document.getElementById("scenario-f").onclick = async () => {
+      setBadge("badge-f", "running");
+      log("F: Prefer pytest test_execution_idempotency for exact duplicate semantics.");
+      setBadge("badge-f", "see tests");
+    };
+  </script>
+</body>
+</html>
